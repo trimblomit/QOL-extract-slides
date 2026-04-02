@@ -30,7 +30,7 @@ def compare_frames(frame_a, frame_b):
     using normalised correlation = basically how similar are the pixel patterns.
     1.0 = identical, 0.0 = completely different.
     """
-    # convert to grayscale (colour doesnt matter for slide detection)
+    # convert to grayscale (colour doesn't matter for slide detection)
     gray_a = cv2.cvtColor(frame_a, cv2.COLOR_BGR2GRAY)
     gray_b = cv2.cvtColor(frame_b, cv2.COLOR_BGR2GRAY)
     # resize both to a small size so comparison is fast
@@ -41,5 +41,36 @@ def compare_frames(frame_a, frame_b):
     # result is a single value array
     similarity = result[0][0]
     return similarity
+
+# --- Main loop ---
+# list to store the file paths of each unique slide image
+slide_paths = []
+# this holds the last saved slide frame for comparing
+previous_slide = None
+slide_count = 0
+
+for frame_number in range(0, total_frames, frame_interval):
+    # jump to the frame
+    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+    ret, frame = cap.read()
+    if ret:
+        # if very first frame, always save it as slide 1
+        if previous_slide is None:
+            is_new_slide = True
+        else:
+            # compare current frame to the last saved slide
+            similarity = compare_frames(frame, previous_slide)
+            is_new_slide = similarity < threshold
+        if is_new_slide:
+            slide_count += 1
+            filename = os.path.join(temp_folder, f"slide_{slide_count:03d}.png")
+            cv2.imwrite(filename, frame)
+            slide_paths.append(filename)
+            previous_slide = frame
+            # show progress
+            timestamp = int(frame_number / fps)
+            mins = timestamp // 60
+            secs = timestamp % 60
+            print(f"Slide {slide_count} detected at {mins:02d}m{secs:02d}s")
 
 cap.release()
