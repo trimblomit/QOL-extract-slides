@@ -1,6 +1,7 @@
 # Detects unique slides from a presentation video and saves them as a PDF
 import cv2
 import os
+from PIL import Image
 
 # --- CONFIG ---
 video_path = "your_video.mp4"       # path to your video file
@@ -74,3 +75,13 @@ for frame_number in range(0, total_frames, frame_interval):
             print(f"Slide {slide_count} detected at {mins:02d}m{secs:02d}s")
 
 cap.release()
+
+# --- Create PDF ---
+if len(slide_paths) > 0:
+    # open each slide image with pillow and convert to RGB (PDF needs RGB, not BGRA)
+    images = [Image.open(path).convert("RGB") for path in slide_paths]
+    # save first image as PDF, append rest as extra pages
+    images[0].save(output_pdf, save_all=True, append_images=images[1:])
+    print(f"\nComplete. {slide_count} slides saved to '{output_pdf}'")
+else:
+    print("\nNo slides detected. Check threshold.")
