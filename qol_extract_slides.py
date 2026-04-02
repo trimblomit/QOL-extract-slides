@@ -85,3 +85,9 @@ if len(slide_paths) > 0:
     print(f"\nComplete. {slide_count} slides saved to '{output_pdf}'")
 else:
     print("\nNo slides detected. Check threshold.")
+
+
+    # --- Temp cleanup ---
+for path in slide_paths:
+    os.remove(path)
+os.rmdir(temp_folder)
